@@ -1,0 +1,8 @@
+# 이 PC에서 만든 디스플레이 구성 (모니터 식별 정보 포함)
+home.cfg
+remote.cfg
+# NirSoft MultiMonitorTool - 직접 받아서 이 폴더에 둔다
+MultiMonitorTool.exe
+# 관리자 작업 훅 (실행 후 자동 삭제되는 임시 파일)
+admin_hook.ps1
+*.log
