@@ -59,6 +59,19 @@ public static class Ccd2 {
         return string.Join(",", act) + "|" + primary;
     }
 
+    // 지금 연결돼 있어 켤 수 있는 대상: "SAM7B0C,SAM79DF" (절전 등으로 링크가 끊긴 모니터는 빠진다)
+    public static string Availables(string[] ids) {
+        PATH[] all; MODE[] am;
+        if (Query(1, out all, out am) != 0) return "";
+        var found = new List<string>();
+        foreach (var path in all) {
+            if (path.target.targetAvailable == 0) continue;
+            string dev = DevPath(path.target.adapterId, path.target.id);
+            foreach (var id in ids) if (Match(dev, id) && !found.Contains(id)) found.Add(id);
+        }
+        return string.Join(",", found);
+    }
+
     // 모든 경로(QDC_ALL_PATHS)에서 원하는 모니터만 골라 켜고 나머지는 끈다. wanted[0] = 주 모니터(0,0)
     public static string Activate(string[] wanted, int[] xs, int[] ys) {
         PATH[] all; MODE[] am;

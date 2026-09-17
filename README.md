@@ -16,6 +16,8 @@ Odyssey G80SH 모니터를 쓰는 PC에서 원격 접속할 때만 DP 더미 동
 | `reset_mode.txt` | 원격 종료 뒤 리셋 방식: `rewake` \| `restartdev` \| `gpureset` \| `off` |
 | `tools/Set-HdrCertification.ps1` | Windows "HDR 인증" 표시 채우기 (`-Undo`로 되돌림) |
 
+화면이 절전이라 G80SH를 켤 수 없는 동안에는 평소 구성이 어긋나 보여도 복구하지 않습니다(rev.6). 그때 복구를 시도하면 모니터가 반복해서 다시 붙었다 떨어지며 장치 연결/해제음이 계속 납니다.
+
 ## 준비
 
 - [NirSoft MultiMonitorTool](https://www.nirsoft.net/utils/multi_monitor_tool.html) `MultiMonitorTool.exe`를 이 폴더에 둡니다(저장소에는 없음). 없으면 감시자가 시작하지 않습니다.

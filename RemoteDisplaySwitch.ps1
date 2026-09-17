@@ -1,6 +1,7 @@
-﻿# RemoteDisplaySwitch.ps1  (rev.5, 2026-09-17)
+﻿# RemoteDisplaySwitch.ps1  (rev.6, 2026-09-18)
 # 규칙
 #  1. 원격이 아닐 때: 동글(BBC0104) 절대 사용 안 함. G80SH + G50F 평소 구성 유지 (어긋나면 즉시 복원)
+#     단, 화면 절전으로 G80SH를 켤 수 없는 동안은 복구하지 않는다 (재인식 루프·장치음 방지, rev.6)
 #  2. 원격일 때: 동글만 사용, G80SH/G50F 사용 안 함
 #  3. 원격이 끝나면: 평소 구성으로 즉시 복원 + 리셋(사람이 PC 앞에서 쓰다가 끝낸 것과 같은 상태로)
 #     → 원격 종료 뒤 화면 절전 때 나는 G80SH 재인식 루프 제거 목적
@@ -71,10 +72,11 @@ function Get-Remote {
 function Get-Stamp { ($self, (Join-Path $base 'SwitchLib.ps1'), (Join-Path $base 'DispCfg.ps1') | ForEach-Object { (Get-Item $_).LastWriteTimeUtc.Ticks }) -join '|' }
 $stamp = Get-Stamp
 
-Log ("watcher started (rev.5) reset={0}" -f (Get-ResetMode))
+Log ("watcher started (rev.6) reset={0}" -f (Get-ResetMode))
 $wasRemote = (Get-Remote).Active
 $lastTry = [datetime]::MinValue
 $pendingReset = $false
+$asleepLogged = $false
 
 while ($true) {
     # 자기 갱신
@@ -106,11 +108,22 @@ while ($true) {
         }
     }
     else {
-        if (-not (Is-HomeLayout $l) -and $canTry) {
-            $lastTry = Get-Date
-            $s = Switch-ToHome
-            Log ("HOME layout -> ok={0} active={1} primary={2} [{3}]" -f $s.Ok, $s.Active, $s.Primary, $s.Steps)
-            $l = Get-Layout
+        # 화면 절전 중에는 G80SH 링크가 끊겨 평소 구성이 어긋나 보인다.
+        # 그때 복구를 시도하면 모니터를 다시 붙였다 떼며 재인식 루프와 장치 연결/해제음이 반복된다 -> 깨어난 뒤에 고친다.
+        # (원격이 끝난 직후 복원 $pendingReset 은 예외: 리셋이 화면을 깨운다)
+        $avail = Get-Available
+        $homeAsleep = -not ($avail -contains $G80)
+        if ($homeAsleep -and -not $pendingReset) {
+            if (-not $asleepLogged) { Log ("home monitor not attachable (asleep) - skip repair [available: {0}]" -f ($avail -join ',')); $asleepLogged = $true }
+        }
+        else {
+            if ($asleepLogged) { Log 'home monitor back - resume repair'; $asleepLogged = $false }
+            if (-not (Is-HomeLayout $l) -and $canTry) {
+                $lastTry = Get-Date
+                $s = Switch-ToHome
+                Log ("HOME layout -> ok={0} active={1} primary={2} [{3}]" -f $s.Ok, $s.Active, $s.Primary, $s.Steps)
+                $l = Get-Layout
+            }
         }
         if ($pendingReset -and (Is-HomeLayout $l)) { $pendingReset = $false; Start-Sleep 2; Do-Reset }
     }

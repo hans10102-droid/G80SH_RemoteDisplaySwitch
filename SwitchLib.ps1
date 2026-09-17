@@ -9,6 +9,9 @@ function Get-Layout {
     [pscustomobject]@{ Active = @($parts[0] -split ',' | Where-Object { $_ }); Primary = $parts[1] }
 }
 
+# 절전 등으로 링크가 끊긴 모니터는 여기에 안 나온다 (그 상태에서 구성을 바꾸면 재인식 루프가 생긴다)
+function Get-Available { @(([Ccd2]::Availables($AllIds)) -split ',' | Where-Object { $_ }) }
+
 function Is-RemoteLayout($l) { ($l.Active -contains $DONGLE) -and -not ($l.Active -contains $G80) -and -not ($l.Active -contains $G50) }
 function Is-HomeLayout($l)   { ($l.Active -contains $G80) -and ($l.Active -contains $G50) -and -not ($l.Active -contains $DONGLE) -and $l.Primary -eq $G80 }
 
